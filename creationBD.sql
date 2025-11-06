@@ -1,0 +1,627 @@
+-- ======================================
+-- CRÉATION DES TABLES 
+-- ======================================
+
+
+-- Table USINES
+CREATE TABLE USINES(
+   CodeU NUMBER(10),
+   NomU VARCHAR2(50),
+   RueU VARCHAR2(100),
+   CPostalU VARCHAR2(5),
+   VilleU VARCHAR2(50),
+   TelU VARCHAR2(10),
+   CONSTRAINT PK_USINES PRIMARY KEY(CodeU)
+);
+
+
+-- Table TYPEU
+CREATE TABLE TYPEU(
+   CodeTU NUMBER(10),
+   NomTU VARCHAR2(20),
+   CONSTRAINT PK_TYPEU PRIMARY KEY(CodeTU)
+);
+
+
+-- Table DEPARTEMENTS
+CREATE TABLE DEPARTEMENTS(
+   CodeD NUMBER(10),
+   NomD VARCHAR2(15),
+   CodeU NUMBER(10) NOT NULL,
+   CONSTRAINT PK_DEPARTEMENTS PRIMARY KEY(CodeD),
+   CONSTRAINT FK_DEPARTEMENTS FOREIGN KEY(CodeU) REFERENCES USINES(CodeU)
+);
+
+
+-- Table POINTS_DE_VENTE
+CREATE TABLE POINTS_DE_VENTE(
+   CodePV NUMBER(10),
+   NomPV VARCHAR2(50),
+   RuePV VARCHAR2(100),
+   CPostalPV VARCHAR2(5),
+   VillePV VARCHAR2(50),
+   TelPV VARCHAR2(10),
+   TypePV VARCHAR2(15),
+   CONSTRAINT PK_POINTS_DE_VENTE PRIMARY KEY(CodePV)
+);
+
+
+-- Table QUALIFICATIONS
+CREATE TABLE QUALIFICATIONS(
+   CodeQ NUMBER(10),
+   NomQ VARCHAR2(50),
+   TauxMinQ BINARY_DOUBLE,
+   CodeQ_est_completee NUMBER(10),
+   CONSTRAINT PK_QUALIFICATIONS PRIMARY KEY(CodeQ),
+   CONSTRAINT FK_QUALIFICATIONS FOREIGN KEY(CodeQ_est_completee) REFERENCES QUALIFICATIONS(CodeQ)
+);
+
+
+-- Table EMPLOYES
+CREATE TABLE EMPLOYES(
+   CodeE NUMBER(10),
+   NomE VARCHAR2(50),
+   PrenomE VARCHAR2(50),
+   RuePersE VARCHAR2(100),
+   CPostalPersE VARCHAR2(5),
+   VillePersE VARCHAR2(50),
+   RueProE VARCHAR2(100),
+   CPostalProE VARCHAR2(5),
+   VilleProE VARCHAR2(50),
+   TelPersE VARCHAR2(10),
+   TelProE VARCHAR2(10),
+   CONSTRAINT PK_EMPLOYES PRIMARY KEY(CodeE)
+);
+
+
+-- Table GAMME
+CREATE TABLE GAMME(
+   CodeG VARCHAR2(3),
+   NomG VARCHAR2(30),
+   CONSTRAINT PK_GAMME PRIMARY KEY(CodeG)
+);
+
+
+-- Table PRODUITS
+CREATE TABLE PRODUITS(
+   CodeP NUMBER(10),
+   NomP VARCHAR2(50),
+   MarqueP VARCHAR2(50),
+   CodeG VARCHAR2(3) NOT NULL,
+   CONSTRAINT PK_PRODUITS PRIMARY KEY(CodeP),
+   CONSTRAINT FK_PRODUITS FOREIGN KEY(CodeG) REFERENCES GAMME(CodeG)
+);
+
+
+-- Table AVOIR_TYPE
+CREATE TABLE AVOIR_TYPE(
+   CodeU NUMBER(10),
+   CodeTU NUMBER(10),
+   CONSTRAINT PK_AVOIR_TYPE PRIMARY KEY(CodeU, CodeTU),
+   CONSTRAINT FK_AVOIR_TYPE FOREIGN KEY(CodeU) REFERENCES USINES(CodeU),
+   CONSTRAINT FK2_AVOIR_TYPE FOREIGN KEY(CodeTU) REFERENCES TYPEU(CodeTU)
+);
+
+
+-- Table FABRIQUER
+CREATE TABLE FABRIQUER(
+   CodeU NUMBER(10),
+   CodeP NUMBER(10),
+   DateFab DATE,
+   Qte_Fab NUMBER(10),
+   CONSTRAINT PK_FABRIQUER PRIMARY KEY(CodeU, CodeP, DateFab),
+   CONSTRAINT FK_FABRIQUER FOREIGN KEY(CodeU) REFERENCES USINES(CodeU),
+   CONSTRAINT FK2_FABRIQUER FOREIGN KEY(CodeP) REFERENCES PRODUITS(CodeP)
+);
+
+
+-- Table ASSEMBLER
+CREATE TABLE ASSEMBLER(
+   CodeP_compose NUMBER(10),
+   CodeP_est_compose NUMBER(10),
+   Qte_Assembl NUMBER(10),
+   CONSTRAINT PK_ASSEMBLER PRIMARY KEY(CodeP_compose, CodeP_est_compose),
+   CONSTRAINT FK_ASSEMBLER FOREIGN KEY(CodeP_compose) REFERENCES PRODUITS(CodeP),
+   CONSTRAINT FK2_ASSEMBLER FOREIGN KEY(CodeP_est_compose) REFERENCES PRODUITS(CodeP)
+);
+
+
+-- Table VENDRE
+CREATE TABLE VENDRE(
+   CodeP NUMBER(10),
+   CodePV NUMBER(10),
+   CodeE NUMBER(10),
+   Mois NUMBER(2),
+   Annee NUMBER(4),
+   Qte_Vendue NUMBER(10),
+   CONSTRAINT PK_VENDRE PRIMARY KEY(CodeP, CodePV, CodeE, Mois, Annee),
+   CONSTRAINT FK_VENDRE FOREIGN KEY(CodeP) REFERENCES PRODUITS(CodeP),
+   CONSTRAINT FK2_VENDRE FOREIGN KEY(CodePV) REFERENCES POINTS_DE_VENTE(CodePV),
+   CONSTRAINT FK3_VENDRE FOREIGN KEY(CodeE) REFERENCES EMPLOYES(CodeE)
+);
+
+
+-- Table FACTURER
+CREATE TABLE FACTURER(
+   CodeP NUMBER(10),
+   Mois NUMBER(2),
+   Annee NUMBER(4),
+   PrixUnitP NUMBER(19,4),
+   CONSTRAINT PK_FACTURER PRIMARY KEY(CodeP, Mois, Annee),
+   CONSTRAINT FK_FACTURER FOREIGN KEY(CodeP) REFERENCES PRODUITS(CodeP)
+);
+
+
+-- Table AUTORISER
+CREATE TABLE AUTORISER(
+   CodeD NUMBER(10),
+   CodeQ NUMBER(10),
+   CONSTRAINT PK_AUTORISER PRIMARY KEY(CodeD, CodeQ),
+   CONSTRAINT FK_AUTORISER FOREIGN KEY(CodeD) REFERENCES DEPARTEMENTS(CodeD),
+   CONSTRAINT FK2_AUTORISER FOREIGN KEY(CodeQ) REFERENCES QUALIFICATIONS(CodeQ)
+);
+
+
+-- Table DIRIGER
+CREATE TABLE DIRIGER(
+   CodeD NUMBER(10),
+   CodeE NUMBER(10),
+   DateDebutDir DATE,
+   CONSTRAINT PK_DIRIGER PRIMARY KEY(CodeD, CodeE, DateDebutDir),
+   CONSTRAINT FK_DIRIGER FOREIGN KEY(CodeD) REFERENCES DEPARTEMENTS(CodeD),
+   CONSTRAINT FK2_DIRIGER FOREIGN KEY(CodeE) REFERENCES EMPLOYES(CodeE)
+);
+
+
+-- Table TRAVAILLER_USINE
+CREATE TABLE TRAVAILLER_USINE(
+   CodeD NUMBER(10),
+   Mois NUMBER(2),
+   Annee NUMBER(4),
+   CodeE NUMBER(10),
+   NbHeures_U BINARY_DOUBLE,
+   CONSTRAINT PK_TRAVAILLER_USINE PRIMARY KEY(CodeD, Mois, Annee, CodeE),
+   CONSTRAINT FK_TRAVAILLER_USINE FOREIGN KEY(CodeD) REFERENCES DEPARTEMENTS(CodeD),
+   CONSTRAINT FK2_TRAVAILLER_USINE FOREIGN KEY(CodeE) REFERENCES EMPLOYES(CodeE)
+);
+
+
+-- Table POSSEDER
+CREATE TABLE POSSEDER(
+   CodeQ NUMBER(10),
+   CodeE NUMBER(10),
+   CONSTRAINT PK_POSSEDER PRIMARY KEY(CodeQ, CodeE),
+   CONSTRAINT FK_POSSEDER FOREIGN KEY(CodeQ) REFERENCES QUALIFICATIONS(CodeQ),
+   CONSTRAINT FK2_POSSEDER FOREIGN KEY(CodeE) REFERENCES EMPLOYES(CodeE)
+);
+
+
+-- Table PAYER1
+CREATE TABLE PAYER1(
+   CodeE NUMBER(10),
+   Annee NUMBER(4),
+   FixeMensuelE BINARY_DOUBLE,
+   IndiceSalE NUMBER(10),
+   CONSTRAINT PK_PAYER1 PRIMARY KEY(CodeE, Annee),
+   CONSTRAINT FK_PAYER1 FOREIGN KEY(CodeE) REFERENCES EMPLOYES(CodeE)
+);
+
+
+-- Table RESPONSABLE
+CREATE TABLE RESPONSABLE(
+   CodeE NUMBER(10),
+   Annee NUMBER(4),
+   CodeG VARCHAR2(3),
+   CONSTRAINT PK_RESPONSABLE PRIMARY KEY(CodeE, Annee, CodeG),
+   CONSTRAINT FK_RESPONSABLE FOREIGN KEY(CodeE) REFERENCES EMPLOYES(CodeE),
+   CONSTRAINT FK3_RESPONSABLE FOREIGN KEY(CodeG) REFERENCES GAMME(CodeG)
+);
+
+
+-- Table PAYER2
+CREATE TABLE PAYER2(
+   Annee NUMBER(4),
+   CodeG VARCHAR2(3),
+   IndiceRetrocessionG BINARY_DOUBLE,
+   CONSTRAINT PK_PAYER2 PRIMARY KEY(Annee, CodeG),
+   CONSTRAINT FK2_PAYER2 FOREIGN KEY(CodeG) REFERENCES GAMME(CodeG)
+);
+
+
+-- Table TRAVAILLER_PT_VENTE
+CREATE TABLE TRAVAILLER_PT_VENTE(
+   CodePV NUMBER(10),
+   Mois NUMBER(2),
+   Annee NUMBER(4),
+   CodeE NUMBER(10),
+   NbHeures_PV BINARY_DOUBLE,
+   CONSTRAINT PK_TRAVAILLER_PT_VENTE PRIMARY KEY(CodePV, Mois, Annee, CodeE),
+   CONSTRAINT FK_TRAVAILLER_PT_VENTE FOREIGN KEY(CodePV) REFERENCES POINTS_DE_VENTE(CodePV),
+   CONSTRAINT FK2_TRAVAILLER_PT_VENTE FOREIGN KEY(CodeE) REFERENCES EMPLOYES(CodeE)
+);
+
+
+-- ======================================
+-- TRIGGERS DE VALIDATION
+-- ======================================
+
+
+-- Trigger USINES
+CREATE OR REPLACE TRIGGER TRG_USINES_VALIDATION
+BEFORE INSERT OR UPDATE ON USINES
+FOR EACH ROW
+BEGIN
+   IF :NEW.CodeU <= 0 THEN
+       RAISE_APPLICATION_ERROR(-20100, 'CodeU doit être supérieur à 0');
+   END IF;
+   IF NOT REGEXP_LIKE(:NEW.CPostalU, '^[0-9]{5}$') THEN
+       RAISE_APPLICATION_ERROR(-20101, 'CPostalU doit contenir exactement 5 chiffres');
+   END IF;
+   IF NOT REGEXP_LIKE(:NEW.TelU, '^[0-9]{10}$') THEN
+       RAISE_APPLICATION_ERROR(-20102, 'TelU doit contenir exactement 10 chiffres');
+   END IF;
+END;
+/
+
+
+-- Trigger TYPEU
+CREATE OR REPLACE TRIGGER TRG_TYPEU_VALIDATION
+BEFORE INSERT OR UPDATE ON TYPEU
+FOR EACH ROW
+BEGIN
+   IF :NEW.CodeTU <= 0 THEN
+       RAISE_APPLICATION_ERROR(-20110, 'CodeTU doit être supérieur à 0');
+   END IF;
+   IF :NEW.NomTU NOT IN ('chaine assemblage', 'scierie', 'métallurgie', 'fonderie') THEN
+       RAISE_APPLICATION_ERROR(-20111, 'NomTU doit être: chaine assemblage, scierie, métallurgie ou fonderie');
+   END IF;
+END;
+/
+
+
+-- Trigger DEPARTEMENTS
+CREATE OR REPLACE TRIGGER TRG_DEPARTEMENTS_VALIDATION
+BEFORE INSERT OR UPDATE ON DEPARTEMENTS
+FOR EACH ROW
+BEGIN
+   IF :NEW.CodeD <= 0 THEN
+       RAISE_APPLICATION_ERROR(-20120, 'CodeD doit être supérieur à 0');
+   END IF;
+   IF :NEW.NomD NOT IN ('fabrication', 'assemblage', 'RH', 'expédition', 'logistique', 'direction', 'finance') THEN
+       RAISE_APPLICATION_ERROR(-20121, 'NomD invalide');
+   END IF;
+END;
+/
+
+
+-- Trigger POINTS_DE_VENTE
+CREATE OR REPLACE TRIGGER TRG_PV_VALIDATION
+BEFORE INSERT OR UPDATE ON POINTS_DE_VENTE
+FOR EACH ROW
+BEGIN
+   IF :NEW.CodePV <= 0 THEN
+       RAISE_APPLICATION_ERROR(-20130, 'CodePV doit être supérieur à 0');
+   END IF;
+   IF NOT REGEXP_LIKE(:NEW.CPostalPV, '^[0-9]{5}$') THEN
+       RAISE_APPLICATION_ERROR(-20131, 'CPostalPV doit contenir exactement 5 chiffres');
+   END IF;
+   IF NOT REGEXP_LIKE(:NEW.TelPV, '^[0-9]{10}$') THEN
+       RAISE_APPLICATION_ERROR(-20132, 'TelPV doit contenir exactement 10 chiffres');
+   END IF;
+   IF :NEW.TypePV NOT IN ('GSB', 'Brico-Express') THEN
+       RAISE_APPLICATION_ERROR(-20133, 'TypePV doit être GSB ou Brico-Express');
+   END IF;
+END;
+/
+
+
+-- Trigger QUALIFICATIONS
+CREATE OR REPLACE TRIGGER TRG_QUALIFICATIONS_VALIDATION
+BEFORE INSERT OR UPDATE ON QUALIFICATIONS
+FOR EACH ROW
+BEGIN
+   IF :NEW.CodeQ <= 0 THEN
+       RAISE_APPLICATION_ERROR(-20140, 'CodeQ doit être supérieur à 0');
+   END IF;
+   IF :NEW.TauxMinQ <= 0 THEN
+       RAISE_APPLICATION_ERROR(-20141, 'TauxMinQ doit être supérieur à 0');
+   END IF;
+END;
+/
+
+
+-- Trigger EMPLOYES
+CREATE OR REPLACE TRIGGER TRG_EMPLOYES_VALIDATION
+BEFORE INSERT OR UPDATE ON EMPLOYES
+FOR EACH ROW
+BEGIN
+   IF :NEW.CodeE <= 0 THEN
+       RAISE_APPLICATION_ERROR(-20150, 'CodeE doit être supérieur à 0');
+   END IF;
+   IF NOT REGEXP_LIKE(:NEW.CPostalPersE, '^[0-9]{5}$') THEN
+       RAISE_APPLICATION_ERROR(-20151, 'CPostalPersE doit contenir exactement 5 chiffres');
+   END IF;
+   IF NOT REGEXP_LIKE(:NEW.CPostalProE, '^[0-9]{5}$') THEN
+       RAISE_APPLICATION_ERROR(-20152, 'CPostalProE doit contenir exactement 5 chiffres');
+   END IF;
+   IF NOT REGEXP_LIKE(:NEW.TelPersE, '^[0-9]{10}$') THEN
+       RAISE_APPLICATION_ERROR(-20153, 'TelPersE doit contenir exactement 10 chiffres');
+   END IF;
+   IF NOT REGEXP_LIKE(:NEW.TelProE, '^[0-9]{10}$') THEN
+       RAISE_APPLICATION_ERROR(-20154, 'TelProE doit contenir exactement 10 chiffres');
+   END IF;
+END;
+/
+
+
+-- Trigger GAMME
+CREATE OR REPLACE TRIGGER TRG_GAMME_VALIDATION
+BEFORE INSERT OR UPDATE ON GAMME
+FOR EACH ROW
+BEGIN
+   IF NOT REGEXP_LIKE(:NEW.CodeG, '^G[0-9]{2}$') THEN
+       RAISE_APPLICATION_ERROR(-20160, 'CodeG doit être au format G suivi de 2 chiffres');
+   END IF;
+   IF :NEW.NomG NOT IN ('jardin et piscine', 'mobilier intérieur', 'plomberie et chauffage',
+                        'salle de bain et WC', 'luminaire', 'électricité et domotique',
+                        'quincaillerie', 'cuisine', 'peinture et droguerie',
+                        'carrelage et parquet', 'matériaux de construction') THEN
+       RAISE_APPLICATION_ERROR(-20161, 'NomG invalide');
+   END IF;
+END;
+/
+
+
+-- Trigger PRODUITS
+CREATE OR REPLACE TRIGGER TRG_PRODUITS_VALIDATION
+BEFORE INSERT OR UPDATE ON PRODUITS
+FOR EACH ROW
+BEGIN
+   IF :NEW.CodeP <= 0 THEN
+       RAISE_APPLICATION_ERROR(-20170, 'CodeP doit être supérieur à 0');
+   END IF;
+END;
+/
+
+
+-- Trigger AVOIR_TYPE
+CREATE OR REPLACE TRIGGER TRG_AVOIR_TYPE_VALIDATION
+BEFORE INSERT OR UPDATE ON AVOIR_TYPE
+FOR EACH ROW
+BEGIN
+   IF :NEW.CodeU <= 0 THEN
+       RAISE_APPLICATION_ERROR(-20180, 'CodeU doit être supérieur à 0');
+   END IF;
+   IF :NEW.CodeTU <= 0 THEN
+       RAISE_APPLICATION_ERROR(-20181, 'CodeTU doit être supérieur à 0');
+   END IF;
+END;
+/
+
+
+-- Trigger FABRIQUER
+CREATE OR REPLACE TRIGGER TRG_FABRIQUER_VALIDATION
+BEFORE INSERT OR UPDATE ON FABRIQUER
+FOR EACH ROW
+BEGIN
+   IF :NEW.DateFab > SYSDATE THEN
+       RAISE_APPLICATION_ERROR(-20001, 'La date de fabrication ne peut pas être dans le futur');
+   END IF;
+   IF :NEW.Qte_Fab <= 0 THEN
+       RAISE_APPLICATION_ERROR(-20190, 'Qte_Fab doit être supérieure à 0');
+   END IF;
+END;
+/
+
+
+-- Trigger ASSEMBLER
+CREATE OR REPLACE TRIGGER TRG_ASSEMBLER_VALIDATION
+BEFORE INSERT OR UPDATE ON ASSEMBLER
+FOR EACH ROW
+BEGIN
+   IF :NEW.Qte_Assembl <= 0 THEN
+       RAISE_APPLICATION_ERROR(-20200, 'Qte_Assembl doit être supérieure à 0');
+   END IF;
+   IF :NEW.CodeP_compose = :NEW.CodeP_est_compose THEN
+       RAISE_APPLICATION_ERROR(-20201, 'Un produit ne peut pas être composé de lui-même');
+   END IF;
+END;
+/
+
+
+-- Trigger VENDRE
+CREATE OR REPLACE TRIGGER TRG_VENDRE_VALIDATION
+BEFORE INSERT OR UPDATE ON VENDRE
+FOR EACH ROW
+BEGIN
+   IF :NEW.Annee > TO_NUMBER(TO_CHAR(SYSDATE, 'YYYY')) THEN
+       RAISE_APPLICATION_ERROR(-20002, 'L''année de vente ne peut pas être dans le futur');
+   END IF;
+   IF :NEW.Qte_Vendue <= 0 THEN
+       RAISE_APPLICATION_ERROR(-20210, 'Qte_Vendue doit être supérieure à 0');
+   END IF;
+   IF :NEW.CodeP <= 0 THEN
+       RAISE_APPLICATION_ERROR(-20211, 'CodeP doit être supérieur à 0');
+   END IF;
+   IF :NEW.CodePV <= 0 THEN
+       RAISE_APPLICATION_ERROR(-20212, 'CodePV doit être supérieur à 0');
+   END IF;
+   IF :NEW.CodeE <= 0 THEN
+       RAISE_APPLICATION_ERROR(-20213, 'CodeE doit être supérieur à 0');
+   END IF;
+   IF :NEW.Mois NOT BETWEEN 1 AND 12 THEN
+       RAISE_APPLICATION_ERROR(-20214, 'Mois doit être entre 1 et 12');
+   END IF;
+END;
+/
+
+
+-- Trigger FACTURER
+CREATE OR REPLACE TRIGGER TRG_FACTURER_VALIDATION
+BEFORE INSERT OR UPDATE ON FACTURER
+FOR EACH ROW
+BEGIN
+   IF :NEW.Annee > TO_NUMBER(TO_CHAR(SYSDATE, 'YYYY')) THEN
+       RAISE_APPLICATION_ERROR(-20003, 'L''année de facturation ne peut pas être dans le futur');
+   END IF;
+   IF :NEW.PrixUnitP <= 0 THEN
+       RAISE_APPLICATION_ERROR(-20220, 'PrixUnitP doit être supérieur à 0');
+   END IF;
+   IF :NEW.CodeP <= 0 THEN
+       RAISE_APPLICATION_ERROR(-20221, 'CodeP doit être supérieur à 0');
+   END IF;
+   IF :NEW.Mois NOT BETWEEN 1 AND 12 THEN
+       RAISE_APPLICATION_ERROR(-20222, 'Mois doit être entre 1 et 12');
+   END IF;
+END;
+/
+
+
+-- Trigger AUTORISER
+CREATE OR REPLACE TRIGGER TRG_AUTORISER_VALIDATION
+BEFORE INSERT OR UPDATE ON AUTORISER
+FOR EACH ROW
+BEGIN
+   IF :NEW.CodeD <= 0 THEN
+       RAISE_APPLICATION_ERROR(-20230, 'CodeD doit être supérieur à 0');
+   END IF;
+   IF :NEW.CodeQ <= 0 THEN
+       RAISE_APPLICATION_ERROR(-20231, 'CodeQ doit être supérieur à 0');
+   END IF;
+END;
+/
+
+
+-- Trigger DIRIGER
+CREATE OR REPLACE TRIGGER TRG_DIRIGER_VALIDATION
+BEFORE INSERT OR UPDATE ON DIRIGER
+FOR EACH ROW
+BEGIN
+   IF :NEW.DateDebutDir > SYSDATE THEN
+       RAISE_APPLICATION_ERROR(-20004, 'La date de début de direction ne peut pas être dans le futur');
+   END IF;
+   IF :NEW.CodeD <= 0 THEN
+       RAISE_APPLICATION_ERROR(-20240, 'CodeD doit être supérieur à 0');
+   END IF;
+   IF :NEW.CodeE <= 0 THEN
+       RAISE_APPLICATION_ERROR(-20241, 'CodeE doit être supérieur à 0');
+   END IF;
+END;
+/
+
+
+-- Trigger TRAVAILLER_USINE
+CREATE OR REPLACE TRIGGER TRG_TRAVAILLER_USINE_VALID
+BEFORE INSERT OR UPDATE ON TRAVAILLER_USINE
+FOR EACH ROW
+BEGIN
+   IF :NEW.Annee > TO_NUMBER(TO_CHAR(SYSDATE, 'YYYY')) THEN
+       RAISE_APPLICATION_ERROR(-20005, 'L''année de travail en usine ne peut pas être dans le futur');
+   END IF;
+   IF :NEW.NbHeures_U <= 0 THEN
+       RAISE_APPLICATION_ERROR(-20250, 'NbHeures_U doit être supérieur à 0');
+   END IF;
+   IF :NEW.CodeD <= 0 THEN
+       RAISE_APPLICATION_ERROR(-20251, 'CodeD doit être supérieur à 0');
+   END IF;
+   IF :NEW.CodeE <= 0 THEN
+       RAISE_APPLICATION_ERROR(-20252, 'CodeE doit être supérieur à 0');
+   END IF;
+   IF :NEW.Mois NOT BETWEEN 1 AND 12 THEN
+       RAISE_APPLICATION_ERROR(-20253, 'Mois doit être entre 1 et 12');
+   END IF;
+END;
+/
+
+
+-- Trigger POSSEDER
+CREATE OR REPLACE TRIGGER TRG_POSSEDER_VALIDATION
+BEFORE INSERT OR UPDATE ON POSSEDER
+FOR EACH ROW
+BEGIN
+   IF :NEW.CodeQ <= 0 THEN
+       RAISE_APPLICATION_ERROR(-20260, 'CodeQ doit être supérieur à 0');
+   END IF;
+   IF :NEW.CodeE <= 0 THEN
+       RAISE_APPLICATION_ERROR(-20261, 'CodeE doit être supérieur à 0');
+   END IF;
+END;
+/
+
+
+-- Trigger PAYER1
+CREATE OR REPLACE TRIGGER TRG_PAYER1_VALIDATION
+BEFORE INSERT OR UPDATE ON PAYER1
+FOR EACH ROW
+BEGIN
+   IF :NEW.Annee > TO_NUMBER(TO_CHAR(SYSDATE, 'YYYY')) THEN
+       RAISE_APPLICATION_ERROR(-20006, 'L''année de paiement ne peut pas être dans le futur');
+   END IF;
+   IF :NEW.FixeMensuelE <= 0 THEN
+       RAISE_APPLICATION_ERROR(-20270, 'FixeMensuelE doit être supérieur à 0');
+   END IF;
+   IF :NEW.IndiceSalE <= 0 THEN
+       RAISE_APPLICATION_ERROR(-20271, 'IndiceSalE doit être supérieur à 0');
+   END IF;
+   IF :NEW.CodeE <= 0 THEN
+       RAISE_APPLICATION_ERROR(-20272, 'CodeE doit être supérieur à 0');
+   END IF;
+END;
+/
+
+
+-- Trigger RESPONSABLE
+CREATE OR REPLACE TRIGGER TRG_RESPONSABLE_VALIDATION
+BEFORE INSERT OR UPDATE ON RESPONSABLE
+FOR EACH ROW
+BEGIN
+   IF :NEW.Annee > TO_NUMBER(TO_CHAR(SYSDATE, 'YYYY')) THEN
+       RAISE_APPLICATION_ERROR(-20007, 'L''année de responsabilité ne peut pas être dans le futur');
+   END IF;
+   IF :NEW.CodeE <= 0 THEN
+       RAISE_APPLICATION_ERROR(-20280, 'CodeE doit être supérieur à 0');
+   END IF;
+END;
+/
+
+
+-- Trigger PAYER2
+CREATE OR REPLACE TRIGGER TRG_PAYER2_VALIDATION
+BEFORE INSERT OR UPDATE ON PAYER2
+FOR EACH ROW
+BEGIN
+   IF :NEW.Annee > TO_NUMBER(TO_CHAR(SYSDATE, 'YYYY')) THEN
+       RAISE_APPLICATION_ERROR(-20008, 'L''année de rétrocession ne peut pas être dans le futur');
+   END IF;
+   IF :NEW.IndiceRetrocessionG <= 0 OR :NEW.IndiceRetrocessionG >= 1 THEN
+       RAISE_APPLICATION_ERROR(-20290, 'IndiceRetrocessionG doit être entre 0 et 1');
+   END IF;
+   IF NOT REGEXP_LIKE(:NEW.CodeG, '^G[0-9]{2}$') THEN
+       RAISE_APPLICATION_ERROR(-20291, 'CodeG doit être au format G suivi de 2 chiffres');
+   END IF;
+END;
+/
+
+
+-- Trigger TRAVAILLER_PT_VENTE
+CREATE OR REPLACE TRIGGER TRG_TRAVAILLER_PV_VALIDATION
+BEFORE INSERT OR UPDATE ON TRAVAILLER_PT_VENTE
+FOR EACH ROW
+BEGIN
+   IF :NEW.Annee > TO_NUMBER(TO_CHAR(SYSDATE, 'YYYY')) THEN
+       RAISE_APPLICATION_ERROR(-20009, 'L''année de travail au point de vente ne peut pas être dans le futur');
+   END IF;
+   IF :NEW.NbHeures_PV <= 0 THEN
+       RAISE_APPLICATION_ERROR(-20300, 'NbHeures_PV doit être supérieur à 0');
+   END IF;
+   IF :NEW.CodePV <= 0 THEN
+       RAISE_APPLICATION_ERROR(-20301, 'CodePV doit être supérieur à 0');
+   END IF;
+   IF :NEW.CodeE <= 0 THEN
+       RAISE_APPLICATION_ERROR(-20302, 'CodeE doit être supérieur à 0');
+   END IF;
+   IF :NEW.Mois NOT BETWEEN 1 AND 12 THEN
+       RAISE_APPLICATION_ERROR(-20303, 'Mois doit être entre 1 et 12');
+   END IF;
+END;
+/
