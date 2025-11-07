@@ -225,3 +225,80 @@ HAVING COUNT(DISTINCT F.CodeP) = (
        GROUP BY U2.CodeU
    )
 );
+
+
+
+-- Les requetes supplementaires
+
+
+-- Donner les informations personnelles (NomE, PrenomE, CodeE) des employés qui travaillent à la fois dans une usine et
+-- dans un point de vente durant la même année et le même mois, mais dont la ville professionnelle est différente de celle de leurs lieux de travail.
+
+
+SELECT DISTINCT e.CodeE, e.NomE, e.PrenomE
+FROM EMPLOYES e, TRAVAILLER_USINE tu, TRAVAILLER_PT_VENTE tpv,
+    DEPARTEMENTS d, USINES u, POINTS_DE_VENTE pv
+WHERE e.CodeE = tu.CodeE
+AND e.CodeE = tpv.CodeE
+AND tu.Mois = tpv.Mois
+AND tu.Annee = tpv.Annee
+AND tu.CodeD = d.CodeD
+AND d.CodeU = u.CodeU
+AND tpv.CodePV = pv.CodePV
+AND u.VilleU <> e.VilleProE
+AND pv.VillePV <> e.VilleProE
+ORDER BY  e.NomE, e.PrenomE;
+
+
+
+
+-- Donner les usines dont l'ensemble des employés couvre collectivement toutes -- les qualifications exigées par leurs départements, et dont le revenu moyen -- par transaction de vente est supérieur au revenu moyen par transaction de -- l'ensemble de l'entreprise.
+
+
+SELECT DISTINCT u.CodeU, u.NomU
+FROM USINES u
+WHERE
+   --1 LES EMPLOYES QUI POSSEDE TOUTES LES QUALIFICATIONS QUE L'ENTREPRISE PROPROSE
+   NOT EXISTS (
+       SELECT a.CodeQ
+       FROM AUTORISER a, DEPARTEMENTS d
+       WHERE a.CodeD = d.CodeD
+         AND d.CodeU = u.CodeU
+         AND a.CodeQ NOT IN (
+             -- Qualifications possédées par les employés de l'usine
+             SELECT p.CodeQ
+             FROM POSSEDER p
+             WHERE p.CodeE IN (
+                 -- Tous les employés travaillant dans l'usine
+                 SELECT tu.CodeE
+                 FROM TRAVAILLER_USINE tu, DEPARTEMENTS d2
+                 WHERE tu.CodeD = d2.CodeD
+                   AND d2.CodeU = u.CodeU
+             )
+         )
+   )
+
+
+   -- 2 Les employés de cette usine génèrent plus que la moyenne globale par transaction
+   AND (
+       -- Revenu moyen global
+       SELECT AVG(f.PrixUnitP * v.Qte_Vendue)
+       FROM VENDRE v, FACTURER f
+       WHERE f.CodeP = v.CodeP
+         AND f.Mois = v.Mois
+         AND f.Annee = v.Annee
+   ) < (
+       -- Revenu moyen des employés de l'usine courante
+       SELECT AVG(f2.PrixUnitP * v2.Qte_Vendue)
+       FROM VENDRE v2, FACTURER f2
+       WHERE f2.CodeP = v2.CodeP
+         AND f2.Mois = v2.Mois
+         AND f2.Annee = v2.Annee
+         AND v2.CodeE IN (
+             -- Employés travaillant dans l'usine courante
+             SELECT tu2.CodeE
+             FROM TRAVAILLER_USINE tu2, DEPARTEMENTS d3
+             WHERE tu2.CodeD = d3.CodeD
+               AND d3.CodeU = u.CodeU
+         )
+   );
